@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Crawler Tool</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Website Crawler Tool</h1>
+    <input type="text" id="url-input" placeholder="Enter website URL" />
+    <button id="start-testing">Start Testing</button>
+    <p id="test-status">Test Status: Idle</p>
+    <p id="estimated-time">Estimated Time: Idle</p>
+    
+    <!-- Humor Text Container -->
+    <p id="humor-text" style="text-align: center; font-style: italic;"></p>
+    
+    <!-- Progress Bar Container -->
+    <div id="progress-container" style="width: 100%; background-color: #ddd;">
+        <div id="progress-bar" style="width: 0%; height: 20px; background-color: #4caf50;"></div>
+    </div>
+    
+    <!-- Report and History Section -->
+    <div id="generated-report">
+        Generated Report: <span id="report-link"></span>
+    </div>
+    
+    <div id="history">History:</div>
+    
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
