@@ -32,6 +32,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let humorInterval;
 
+    // Poll progress periodically if using polling fallback
+    async function pollProgress() {
+        try {
+            const response = await fetch("/api/progress");
+            const { progress, estimatedTime } = await response.json();
+            progressBar.style.width = `${progress}%`;
+            estimatedTimeDisplay.textContent = `Estimated Time: ${estimatedTime.toFixed(1)} seconds remaining`;
+
+            if (progress === 100) {
+                clearInterval(pollingInterval);
+                statusDisplay.textContent = "Completed";
+            }
+        } catch (error) {
+            console.error("Error polling progress:", error);
+        }
+    }
+
+    // Set interval to call pollProgress every 3 seconds
+    const pollingInterval = setInterval(pollProgress, 3000);
+
     // Initialize socket connection
     const socket = io();
     socket.on("connect", () => {
