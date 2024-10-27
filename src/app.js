@@ -20,7 +20,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../public")));
 
-// Main page route
+// Serve the main page
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "../public", "index.html"));
 });
@@ -31,8 +31,8 @@ app.post("/api/start-crawl", async (req, res) => {
     if (!url) return res.status(400).json({ error: "URL is required" });
 
     try {
-        const crawlResults = await crawlWebsite(url, io);
-        const reportPath = await generateReport(io, crawlResults, url);
+        const crawlResults = await crawlWebsite(url);
+        const reportPath = await generateReport(crawlResults, url);
         res.json({ reportPath: `/reports/${path.basename(reportPath)}` });
     } catch (error) {
         console.error("Error during crawl:", error);
