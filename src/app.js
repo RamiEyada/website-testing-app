@@ -31,8 +31,9 @@ app.post("/api/start-crawl", async (req, res) => {
     if (!url) return res.status(400).json({ error: "URL is required" });
 
     try {
-        const crawlResults = await crawlWebsite(url);
-        const reportPath = await generateReport(crawlResults, url);
+        // Pass `io` to `crawlWebsite` and `generateReport`
+        const crawlResults = await crawlWebsite(url, io);
+        const reportPath = await generateReport(io, crawlResults, url);
         res.json({ reportPath: `/reports/${path.basename(reportPath)}` });
     } catch (error) {
         console.error("Error during crawl:", error);

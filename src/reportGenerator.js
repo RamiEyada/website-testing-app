@@ -3,7 +3,7 @@
 const fs = require("fs").promises;
 const path = require("path");
 
-async function generateReport(io, history, url) {
+async function generateReport(io, crawlResults, url) {
     const timestamp = Date.now();
     const reportDir = path.join(__dirname, "reports", `report_${timestamp}`);
     const reportPath = path.join(reportDir, "report.html");
@@ -41,8 +41,8 @@ async function generateReport(io, history, url) {
                 </tr>
     `;
 
-    // Loop through the history and add each entry to the table
-    for (const entry of history) {
+    // Loop through the crawl results and add each entry to the table
+    for (const entry of crawlResults) {
         const screenshotPath = entry.screenshot ? path.basename(entry.screenshot) : "N/A";
         const screenshotCell = entry.screenshot
             ? `<img src="../screenshots/${screenshotPath}" alt="Screenshot" width="200">`
@@ -70,8 +70,8 @@ async function generateReport(io, history, url) {
     await fs.writeFile(reportPath, reportContent);
     console.log("Report generated successfully at:", reportPath);
 
-    // Emit the report-ready event with the report path
-    io.emit("report-ready", { reportPath });
+    // Emit the report-ready event with the report path for real-time updates
+    io.emit("report-ready", { reportPath: `/reports/${path.basename(reportPath)}` });
     return reportPath;
 }
 

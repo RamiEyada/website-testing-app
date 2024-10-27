@@ -46,7 +46,7 @@ async function tryPageGoto(page, url, retries = 3) {
 }
 
 // Crawl a single page and capture its data
-async function crawlPage(page, url, visitedLinks, progressCallback, baseDomain, startTime, depth = 0, maxDepth = 3) {
+async function crawlPage(page, url, visitedLinks, io, progressCallback, baseDomain, startTime, depth = 0, maxDepth = 3) {
     if (depth > maxDepth || visitedLinks.has(url) || !isValidUrl(url) || !isSameDomain(url, baseDomain)) {
         console.log(`Skipping URL: ${url}`);
         return [];
@@ -74,14 +74,14 @@ async function crawlPage(page, url, visitedLinks, progressCallback, baseDomain, 
         const elapsedTime = (Date.now() - startTime) / 1000;
         const remainingTime = completedLinks > 0 ? ((elapsedTime / completedLinks) * (totalLinks - completedLinks)).toFixed(1) : 0;
 
-        progressCallback({
+        io.emit("progress", {
             progress: Math.min(progress, 100),
             estimatedTime: Math.max(remainingTime, 1),
         });
 
         const results = [{ url, loadingTime, screenshot: screenshotPath }];
         for (const link of links) {
-            const subPageData = await crawlPage(page, link, visitedLinks, progressCallback, baseDomain, startTime, depth + 1, maxDepth);
+            const subPageData = await crawlPage(page, link, visitedLinks, io, progressCallback, baseDomain, startTime, depth + 1, maxDepth);
             results.push(...subPageData);
         }
 
@@ -102,9 +102,7 @@ async function crawlWebsite(url, io) {
     const baseDomain = new URL(url).hostname;
     const startTime = Date.now();
 
-    const results = await crawlPage(page, url, new Set(), (progressData) => {
-        io.emit("progress", progressData);
-    }, baseDomain, startTime);
+    const results = await crawlPage(page, url, new Set(), io, null, baseDomain, startTime);
 
     await browser.close();
     return results;
