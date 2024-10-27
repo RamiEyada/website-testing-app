@@ -4,8 +4,8 @@ const socketIo = require("socket.io");
 const path = require("path");
 const cors = require("cors");
 
-const { crawlWebsite } = require("./crawler"); // Ensure this is correctly exported from crawler.js
-const { generateReport } = require("./reportGenerator"); // Ensure this is correctly exported from reportGenerator.js
+const { crawlWebsite } = require("./crawler");
+const { generateReport } = require("./reportGenerator");
 
 const app = express();
 const server = http.createServer(app);
@@ -17,20 +17,19 @@ app.use(cors()); // Apply CORS middleware
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-// Serve the main page
+// Main page route
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// Define the start-crawl route
+// Start crawl endpoint
 app.post("/api/start-crawl", async (req, res) => {
     const { url } = req.body;
     if (!url) return res.status(400).json({ error: "URL is required" });
 
     try {
-        const crawlResults = await crawlWebsite(url, io); // Start crawling with real-time updates
-        const reportPath = await generateReport(io, crawlResults, url); // Generate the report
-
+        const crawlResults = await crawlWebsite(url, io); // Crawling with real-time updates
+        const reportPath = await generateReport(io, crawlResults, url); // Generate report
         res.json({ reportPath: `/reports/${path.basename(reportPath)}` });
     } catch (error) {
         console.error("Error during crawl:", error);
@@ -41,7 +40,7 @@ app.post("/api/start-crawl", async (req, res) => {
 // Serve generated reports
 app.use("/reports", express.static(path.join(__dirname, "reports")));
 
-// Handle socket.io connections
+// Socket.io connection handling
 io.on("connection", (socket) => {
     console.log("Client connected");
     socket.on("disconnect", () => {
