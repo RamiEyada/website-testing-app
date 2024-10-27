@@ -1,7 +1,7 @@
 const fs = require("fs").promises;
 const path = require("path");
 
-async function generateReport(history, url) {
+async function generateReport(io, history, url) {
     const timestamp = Date.now();
     const reportDir = path.join(__dirname, "reports", `report_${timestamp}`);
     const reportPath = path.join(reportDir, "report.html");
@@ -66,7 +66,10 @@ async function generateReport(history, url) {
 
     // Write the report content to an HTML file
     await fs.writeFile(reportPath, reportContent);
+    console.log("Report generated successfully at:", reportPath);
 
+    // Emit the report-ready event with the report path
+    io.emit("report-ready", { reportPath });
     return reportPath;
 }
 

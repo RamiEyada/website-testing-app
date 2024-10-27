@@ -2,10 +2,12 @@ const puppeteer = require("puppeteer");
 const path = require("path");
 const fs = require("fs").promises;
 
+// Ensure screenshots directory exists
 async function ensureDirectoryExists(dir) {
     await fs.mkdir(dir, { recursive: true });
 }
 
+// Check if the URL is valid
 function isValidUrl(url) {
     try {
         new URL(url);
@@ -15,6 +17,7 @@ function isValidUrl(url) {
     }
 }
 
+// Check if URL is on the same domain
 function isSameDomain(url, baseDomain) {
     try {
         const urlDomain = new URL(url).hostname;
@@ -24,8 +27,25 @@ function isSameDomain(url, baseDomain) {
     }
 }
 
-async function crawlPage(page, url, visitedLinks, progressCallback, baseDomain, startTime) {
-    if (visitedLinks.has(url) || !isValidUrl(url) || !isSameDomain(url, baseDomain)) {
+// Function to attempt page load with retries
+async function tryPageGoto(page, url, retries = 3) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 }); // Increased timeout to 60 seconds
+            return;
+        } catch (error) {
+            console.warn(`Attempt ${i + 1} failed for URL: ${url}`);
+            if (i === retries - 1) {
+                console.error(`Failed to load URL after ${retries} attempts: ${url}`);
+                throw error;
+            }
+        }
+    }
+}
+
+// Crawl a single page and capture its data
+async function crawlPage(page, url, visitedLinks, progressCallback, baseDomain, startTime, depth = 0, maxDepth = 3) {
+    if (depth > maxDepth || visitedLinks.has(url) || !isValidUrl(url) || !isSameDomain(url, baseDomain)) {
         console.log(`Skipping URL: ${url}`);
         return [];
     }
@@ -34,7 +54,7 @@ async function crawlPage(page, url, visitedLinks, progressCallback, baseDomain, 
     console.log(`Loading URL: ${url}`);
     const pageLoadStartTime = Date.now();
     try {
-        await page.goto(url, { waitUntil: "networkidle2", timeout: 30000 });
+        await tryPageGoto(page, url);  // Using the retry function for navigation
         const loadingTime = Date.now() - pageLoadStartTime;
 
         const screenshotPath = path.join(__dirname, "screenshots", `${Date.now()}-${Math.random()}.png`);
@@ -61,7 +81,7 @@ async function crawlPage(page, url, visitedLinks, progressCallback, baseDomain, 
         // Recursively crawl the remaining links
         const results = [{ url, loadingTime, screenshot: screenshotPath }];
         for (const link of links) {
-            const subPageData = await crawlPage(page, link, visitedLinks, progressCallback, baseDomain, startTime);
+            const subPageData = await crawlPage(page, link, visitedLinks, progressCallback, baseDomain, startTime, depth + 1, maxDepth);
             results.push(...subPageData);
         }
 
@@ -72,18 +92,45 @@ async function crawlPage(page, url, visitedLinks, progressCallback, baseDomain, 
     }
 }
 
-async function crawlWebsite(url, progressCallback, visitedLinks = new Set()) {
+// Main function to crawl the website
+async function crawlWebsite(url, io) {
     await ensureDirectoryExists(path.join(__dirname, "screenshots"));
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
     await page.setViewport({ width: 1280, height: 800 });
 
     const baseDomain = new URL(url).hostname;
-    const startTime = Date.now(); // Track overall start time for better estimated time calculation
-    const results = await crawlPage(page, url, visitedLinks, progressCallback, baseDomain, startTime);
+    const startTime = Date.now();
+
+    const results = await crawlPage(page, url, new Set(), (progressData) => {
+        io.emit("progress", progressData); // Emit progress updates via `socket.io`
+    }, baseDomain, startTime);
 
     await browser.close();
     return results;
 }
 
-module.exports = { crawlWebsite };
+// Wrapper function to start crawling and return the report path
+function crawl(url, io) {
+    return new Promise(async (resolve, reject) => {
+        console.log(`Starting crawl for URL: ${url}`);
+
+        try {
+            if (!url.startsWith("http")) {
+                throw new Error("Invalid URL format");
+            }
+
+            const results = await crawlWebsite(url, io);
+
+            const reportPath = `/path/to/generated/report-${Date.now()}.pdf`;
+            console.log("Crawl completed");
+            resolve(reportPath);
+        } catch (error) {
+            console.error("Crawl failed:", error);
+            reject(error);
+        }
+    });
+}
+
+// Export both functions
+module.exports = { crawl, crawlWebsite };

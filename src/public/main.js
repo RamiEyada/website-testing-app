@@ -64,6 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    // Socket.io for real-time progress updates
     const socket = io();
     socket.on("progress", ({ progress, estimatedTime }) => {
         progressBar.style.width = `${progress}%`;
