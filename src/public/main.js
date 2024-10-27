@@ -1,3 +1,5 @@
+// public/main.js
+
 document.addEventListener("DOMContentLoaded", () => {
     const startTestingButton = document.querySelector("#start-testing");
     const urlInput = document.querySelector("#url-input");

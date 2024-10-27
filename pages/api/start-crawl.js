@@ -1,6 +1,7 @@
-const { crawlWebsite } = require("../../src/crawler"); // Adjusted for relative path
-const { generateReport } = require("../../src/reportGenerator");
+// pages/api/start-crawl.js
 const path = require("path");
+const { crawlWebsite } = require("../../src/crawler");
+const { generateReport } = require("../../src/reportGenerator");
 
 module.exports = async (req, res) => {
     if (req.method !== "POST") {
@@ -11,8 +12,9 @@ module.exports = async (req, res) => {
     if (!url) return res.status(400).json({ error: "URL is required" });
 
     try {
-        const crawlResults = await crawlWebsite(url); // Ensure this function doesn’t use `io`
-        const reportPath = await generateReport(crawlResults, url);
+        const crawlResults = await crawlWebsite(url); // Run the crawler
+        const reportPath = await generateReport(crawlResults, url); // Generate the report
+
         res.status(200).json({ reportPath: `/reports/${path.basename(reportPath)}` });
     } catch (error) {
         console.error("Error during crawl:", error);

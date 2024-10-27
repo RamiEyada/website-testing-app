@@ -7,10 +7,16 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div>
+    <div class="container">
         <h1>Website Crawler Tool</h1>
+        
+        <!-- Input for URL -->
         <input id="url-input" type="text" placeholder="Enter website URL" />
+        
+        <!-- Button to start testing -->
         <button id="start-testing">Start Testing</button>
+        
+        <!-- Test status and estimated time display -->
         <p id="test-status">Test Status: Idle</p>
         <p id="estimated-time">Estimated Time: Idle</p>
         
@@ -30,9 +36,10 @@
         <!-- History Section -->
         <div id="history">History:</div>
     </div>
-    
+
     <!-- Socket.io CDN for real-time communication -->
     <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+    
     <!-- Main JavaScript file -->
     <script src="main.js"></script>
 </body>
