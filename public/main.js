@@ -9,6 +9,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const estimatedTimeDisplay = document.getElementById("estimated-time");
     const humorTextDisplay = document.getElementById("humor-text");
 
+    let testingInProgress = false;  // Track whether a test is in progress
+    let humorInterval;
+    let pollingInterval;
+
     const humorMessages = [
         "Links are running everywhere!",
         "Get them, cowboy!",
@@ -30,9 +34,31 @@ document.addEventListener("DOMContentLoaded", () => {
         "Halid is depressed"
     ];
 
-    let humorInterval;
+    // Function to toggle button state
+    function toggleButton() {
+        if (testingInProgress) {
+            startTestingButton.textContent = "Stop Testing";
+            startTestingButton.style.backgroundColor = "red";
+        } else {
+            startTestingButton.textContent = "Start Testing";
+            startTestingButton.style.backgroundColor = "green";
+        }
+    }
 
-    // Poll progress periodically if using polling fallback
+    // Function to stop the test
+    function stopTesting() {
+        testingInProgress = false;
+        toggleButton();
+        clearInterval(humorInterval);
+        clearInterval(pollingInterval);
+        statusDisplay.textContent = "Stopped";
+        progressBar.style.width = "0%";
+        estimatedTimeDisplay.textContent = "Canceled";
+        humorTextDisplay.textContent = "";
+        // Optionally: send a "cancel" request to the server if backend supports it
+    }
+
+    // Function to poll progress periodically
     async function pollProgress() {
         try {
             const response = await fetch("/api/progress");
@@ -43,14 +69,13 @@ document.addEventListener("DOMContentLoaded", () => {
             if (progress === 100) {
                 clearInterval(pollingInterval);
                 statusDisplay.textContent = "Completed";
+                testingInProgress = false;
+                toggleButton();
             }
         } catch (error) {
             console.error("Error polling progress:", error);
         }
     }
-
-    // Set interval to call pollProgress every 3 seconds
-    const pollingInterval = setInterval(pollProgress, 3000);
 
     // Initialize socket connection
     const socket = io();
@@ -68,28 +93,42 @@ document.addEventListener("DOMContentLoaded", () => {
         humorTextDisplay.textContent = "";
         statusDisplay.textContent = "Completed";
         reportLink.innerHTML = `<a href="${reportPath}" target="_blank">View Report</a>`;
+        testingInProgress = false;
+        toggleButton();
     });
 
     socket.on("disconnect", () => {
         console.log("Socket disconnected");
     });
 
-    // Event listener for the Start Testing button
+    // Event listener for the Start/Stop Testing button
     startTestingButton.addEventListener("click", async () => {
+        if (testingInProgress) {
+            stopTesting();  // Stop the test if already in progress
+            return;
+        }
+
         const url = urlInput.value.trim();
         if (!url) return alert("Please enter a URL to test.");
 
+        // Start the test
+        testingInProgress = true;
+        toggleButton();
         statusDisplay.textContent = "In-Progress";
         progressBar.style.width = "0%";
         estimatedTimeDisplay.textContent = "Estimating...";
         reportLink.innerHTML = "";
 
+        // Set humor messages
         let messageIndex = 0;
         humorTextDisplay.textContent = humorMessages[messageIndex];
         humorInterval = setInterval(() => {
             messageIndex = (messageIndex + 1) % humorMessages.length;
             humorTextDisplay.textContent = humorMessages[messageIndex];
         }, 2000);
+
+        // Poll for progress every few seconds
+        pollingInterval = setInterval(pollProgress, 3000);
 
         try {
             const response = await fetch("/api/start-crawl", {
@@ -104,15 +143,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 statusDisplay.textContent = "Completed";
                 reportLink.innerHTML = `<a href="${data.reportPath}" target="_blank">View Report</a>`;
             } else {
-                statusDisplay.textContent = "Failed";
-                clearInterval(humorInterval);
-                humorTextDisplay.textContent = "";
+                stopTesting();  // Stop the test in case of an error
                 alert(`Error: ${data.error}`);
             }
         } catch (error) {
-            statusDisplay.textContent = "Failed";
-            clearInterval(humorInterval);
-            humorTextDisplay.textContent = "";
+            stopTesting();  // Stop the test in case of an error
             alert("An error occurred. Please check the console for details.");
         }
     });
