@@ -77,8 +77,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Initialize socket connection
-    const socket = io();
+    // Initialize socket connection with polling only
+    const socket = io({
+        transports: ["polling"],
+    });
+
     socket.on("connect", () => {
         console.log("Socket connected");
     });
