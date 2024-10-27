@@ -2,9 +2,10 @@ const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
 const path = require("path");
+const cors = require("cors"); // Import CORS
 
-const { crawlWebsite } = require("./crawler");
-const generateReport = require("./reportGenerator");
+const { crawlWebsite } = require("./crawler"); // Ensure this is correctly exported from crawler.js
+const { generateReport } = require("./reportGenerator"); // Ensure this is correctly exported from reportGenerator.js
 
 const app = express();
 const server = http.createServer(app);
@@ -12,6 +13,7 @@ const io = socketIo(server);
 
 const PORT = process.env.PORT || 3000;
 
+app.use(cors()); // Apply CORS middleware
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -20,8 +22,8 @@ app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// Endpoint to start the crawl
-app.post("/start-crawl", async (req, res) => {
+// Define the start-crawl route
+app.post("/api/start-crawl", async (req, res) => {
     const { url } = req.body;
     if (!url) return res.status(400).json({ error: "URL is required" });
 

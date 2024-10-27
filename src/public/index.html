@@ -7,26 +7,29 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Website Crawler Tool</h1>
-    <input type="text" id="url-input" placeholder="Enter website URL" />
-    <button id="start-testing">Start Testing</button>
-    <p id="test-status">Test Status: Idle</p>
-    <p id="estimated-time">Estimated Time: Idle</p>
-    
-    <!-- Humor Text Container -->
-    <p id="humor-text" style="text-align: center; font-style: italic;"></p>
-    
-    <!-- Progress Bar Container -->
-    <div id="progress-container" style="width: 100%; background-color: #ddd;">
-        <div id="progress-bar" style="width: 0%; height: 20px; background-color: #4caf50;"></div>
+    <div>
+        <h1>Website Crawler Tool</h1>
+        <input id="url-input" type="text" placeholder="Enter website URL" />
+        <button id="start-testing">Start Testing</button>
+        <p id="test-status">Test Status: Idle</p>
+        <p id="estimated-time">Estimated Time: Idle</p>
+        
+        <!-- Humor Text Container -->
+        <p id="humor-text" style="text-align: center; font-style: italic;"></p>
+        
+        <!-- Progress Bar Container -->
+        <div id="progress-container" style="width: 100%; background-color: #ddd;">
+            <div id="progress-bar" style="width: 0%; height: 20px; background-color: #4caf50;"></div>
+        </div>
+        
+        <!-- Report Link -->
+        <div id="generated-report">
+            Generated Report: <span id="report-link"></span>
+        </div>
+        
+        <!-- History Section -->
+        <div id="history">History:</div>
     </div>
-    
-    <!-- Report and History Section -->
-    <div id="generated-report">
-        Generated Report: <span id="report-link"></span>
-    </div>
-    
-    <div id="history">History:</div>
     
     <!-- Socket.io CDN for real-time communication -->
     <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>

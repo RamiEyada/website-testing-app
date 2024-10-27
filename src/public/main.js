@@ -17,11 +17,42 @@ document.addEventListener("DOMContentLoaded", () => {
         "Wrangling some tricky links!",
         "Riding through the wild web!",
         "Just one more link... or not!",
-        "Almost got them all!"
+        "Almost got them all!",
+        "Moujahed still didn't finish eating, so I'm still working",
+        "Enes is the new Steve Jobs",
+        "Rami is trying to create a new tool",
+        "Sinan is running to solve everyone's issues",
+        "Morad is pushing the engineers to work",
+        "Ali Narin is trying to solve SEO issues",
+        "Tougba is gathering Podcasts files",
+        "Halid is depressed"
     ];
 
     let humorInterval;
 
+    // Initialize socket connection
+    const socket = io();
+    socket.on("connect", () => {
+        console.log("Socket connected");
+    });
+
+    socket.on("progress", ({ progress, estimatedTime }) => {
+        progressBar.style.width = `${progress}%`;
+        estimatedTimeDisplay.textContent = `Estimated Time: ${estimatedTime.toFixed(1)} seconds remaining`;
+    });
+
+    socket.on("report-ready", ({ reportPath }) => {
+        clearInterval(humorInterval);
+        humorTextDisplay.textContent = "";
+        statusDisplay.textContent = "Completed";
+        reportLink.innerHTML = `<a href="${reportPath}" target="_blank">View Report</a>`;
+    });
+
+    socket.on("disconnect", () => {
+        console.log("Socket disconnected");
+    });
+
+    // Event listener for the Start Testing button
     startTestingButton.addEventListener("click", async () => {
         const url = urlInput.value.trim();
         if (!url) return alert("Please enter a URL to test.");
@@ -39,7 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 2000);
 
         try {
-            const response = await fetch("/start-crawl", {
+            const response = await fetch("/api/start-crawl", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ url })
@@ -62,12 +93,5 @@ document.addEventListener("DOMContentLoaded", () => {
             humorTextDisplay.textContent = "";
             alert("An error occurred. Please check the console for details.");
         }
-    });
-
-    // Socket.io for real-time progress updates
-    const socket = io();
-    socket.on("progress", ({ progress, estimatedTime }) => {
-        progressBar.style.width = `${progress}%`;
-        estimatedTimeDisplay.textContent = `Estimated Time: ${estimatedTime.toFixed(1)} seconds remaining`;
     });
 });

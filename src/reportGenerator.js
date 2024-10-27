@@ -73,4 +73,4 @@ async function generateReport(io, history, url) {
     return reportPath;
 }
 
-module.exports = generateReport;
+module.exports = { generateReport };

@@ -31,7 +31,7 @@ function isSameDomain(url, baseDomain) {
 async function tryPageGoto(page, url, retries = 3) {
     for (let i = 0; i < retries; i++) {
         try {
-            await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 }); // Increased timeout to 60 seconds
+            await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
             return;
         } catch (error) {
             console.warn(`Attempt ${i + 1} failed for URL: ${url}`);
@@ -54,7 +54,7 @@ async function crawlPage(page, url, visitedLinks, progressCallback, baseDomain, 
     console.log(`Loading URL: ${url}`);
     const pageLoadStartTime = Date.now();
     try {
-        await tryPageGoto(page, url);  // Using the retry function for navigation
+        await tryPageGoto(page, url);
         const loadingTime = Date.now() - pageLoadStartTime;
 
         const screenshotPath = path.join(__dirname, "screenshots", `${Date.now()}-${Math.random()}.png`);
@@ -66,11 +66,10 @@ async function crawlPage(page, url, visitedLinks, progressCallback, baseDomain, 
             (link) => isValidUrl(link) && isSameDomain(link, baseDomain) && !visitedLinks.has(link)
         );
 
-        // Calculate and update progress and estimated time
         const completedLinks = visitedLinks.size;
         const totalLinks = completedLinks + links.length;
         const progress = (completedLinks / totalLinks) * 100;
-        const elapsedTime = (Date.now() - startTime) / 1000; // seconds
+        const elapsedTime = (Date.now() - startTime) / 1000;
         const remainingTime = completedLinks > 0 ? ((elapsedTime / completedLinks) * (totalLinks - completedLinks)).toFixed(1) : 0;
 
         progressCallback({
@@ -78,7 +77,6 @@ async function crawlPage(page, url, visitedLinks, progressCallback, baseDomain, 
             estimatedTime: Math.max(remainingTime, 1),
         });
 
-        // Recursively crawl the remaining links
         const results = [{ url, loadingTime, screenshot: screenshotPath }];
         for (const link of links) {
             const subPageData = await crawlPage(page, link, visitedLinks, progressCallback, baseDomain, startTime, depth + 1, maxDepth);
@@ -103,34 +101,11 @@ async function crawlWebsite(url, io) {
     const startTime = Date.now();
 
     const results = await crawlPage(page, url, new Set(), (progressData) => {
-        io.emit("progress", progressData); // Emit progress updates via `socket.io`
+        io.emit("progress", progressData);
     }, baseDomain, startTime);
 
     await browser.close();
     return results;
 }
 
-// Wrapper function to start crawling and return the report path
-function crawl(url, io) {
-    return new Promise(async (resolve, reject) => {
-        console.log(`Starting crawl for URL: ${url}`);
-
-        try {
-            if (!url.startsWith("http")) {
-                throw new Error("Invalid URL format");
-            }
-
-            const results = await crawlWebsite(url, io);
-
-            const reportPath = `/path/to/generated/report-${Date.now()}.pdf`;
-            console.log("Crawl completed");
-            resolve(reportPath);
-        } catch (error) {
-            console.error("Crawl failed:", error);
-            reject(error);
-        }
-    });
-}
-
-// Export both functions
-module.exports = { crawl, crawlWebsite };
+module.exports = { crawlWebsite };
