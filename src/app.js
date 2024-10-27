@@ -2,7 +2,7 @@ const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
 const path = require("path");
-const cors = require("cors"); // Import CORS
+const cors = require("cors");
 
 const { crawlWebsite } = require("./crawler"); // Ensure this is correctly exported from crawler.js
 const { generateReport } = require("./reportGenerator"); // Ensure this is correctly exported from reportGenerator.js
